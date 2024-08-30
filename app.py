@@ -13,6 +13,11 @@ os.environ["AZURE_OPENAI_API_KEY"]= "23ba1b747e164a38b3e537573b49cf60"
 
 DB_FAISS_PATH = 'vectorstore/db_faiss'
 
+
+
+# Inject custom CSS
+
+
 custom_prompt_template = """Use the following pieces of information to answer the user's question.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -22,12 +27,55 @@ Question: {question}
 Only return the helpful answer below and nothing else.
 Helpful answer:
 """
+st.set_page_config(page_title="Bank Smart Search")
+custom_css = """
+    <style>
+        /* General body styling */
+        body {
+            font-family: "proxima_nova", Arial, sans-serif !important;
+        }
+        .response {
+            color: black;
+        }
+        .st-emotion-cache-1c7y2kd {
+            background-color: unset;
+        }
+        .st-emotion-cache-uzeiqp {
+            font-family: "proxima_nova", Arial, sans-serif !important;
+            color: #ec0100 !important;
+        }
+        .st-emotion-cache-187vdiz {
+            font-family: "proxima_nova", Arial, sans-serif !important;
+            color: #ec0100 !important;
+        }
+        .adbc-title {
+            font-family: "proxima_nova", Arial, sans-serif !important;
+            color: #ec0100 !important;
+        }
 
-st.set_page_config(page_title="🤖🧠  Chatbot")
+        /* Title styling */
+        .stApp h1 {
+            color: #ec0100;
+        }
+
+        /* Sidebar button styling */
+        .css-1l4w6pd { 
+            font-size: 14px !important; 
+        }
+
+        /* Adjust the chat message styling */
+        .css-1q8dd3e {
+            font-size: 14px !important;
+        }
+    </style>
+"""
+
+st.markdown(custom_css, unsafe_allow_html=True)
 
 
-st.title('🤖🧠 Chatbot')
-st.write('This chatbot will provide the knowledge about central bank of UAE.')
+
+st.markdown('<h1 class="adbc-title">Bank Smart Search</h1>', unsafe_allow_html=True)
+st.write('This chatbot will provide the knowledge based on the bank provided document')
 
 def set_custom_prompt():
     """
@@ -92,7 +140,10 @@ if "messages" not in st.session_state.keys():
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.write(message["content"])
+        if message["role"] != "assistant":
+            st.write(message["content"])
+        else:
+            st.markdown(f'<div class="response">{message["content"]}</div>', unsafe_allow_html=True)
 
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "Welcome to the Central Bank Of UAE ask anything related to cerdit facilities?"}]
@@ -115,13 +166,19 @@ if st.session_state.messages[-1]["role"] != "assistant":
             if "I'm sorry"  in response or "I don't know" in response:
                 placeholder = st.empty()
                 full_response=load_llm1(prompt)
-                placeholder.markdown(full_response)
+                placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
+                # st.write("case 1")
+                # placeholder.markdown(full_response)
+                
             else:
                 placeholder = st.empty()
                 full_response = ''
                 for item in response:
                     full_response += item
-                    placeholder.markdown(full_response)
-                placeholder.markdown(full_response)
+                    # st.write("case 2")
+                    # placeholder.markdown(full_response)
+                # st.write("case 3")
+                placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
+                # placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
