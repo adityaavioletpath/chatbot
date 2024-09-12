@@ -84,10 +84,7 @@ def set_custom_prompt():
                             input_variables=['context', 'question'])
     return prompt
 
-
-    
-    
-    
+   
 
 
 def load_llm():
