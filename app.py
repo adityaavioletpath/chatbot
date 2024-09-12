@@ -5,6 +5,7 @@ from langchain_openai import AzureOpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_openai import AzureChatOpenAI
+from langchain.memory import ConversationBufferMemory
 
 os.environ["AZURE_OPENAI_API_VERSION"]="2024-05-01-preview"
 os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"]="text-embedding-ada"
@@ -17,10 +18,8 @@ DB_FAISS_PATH = 'vectorstore/db_faiss'
 
 # Inject custom CSS
 
-
 custom_prompt_template = """Use the following pieces of information to answer the user's question.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
 Context: {context}
 Question: {question}
 
@@ -86,6 +85,9 @@ def set_custom_prompt():
     return prompt
 
 
+    
+    
+    
 
 
 def load_llm():
@@ -96,22 +98,18 @@ def load_llm():
 )
     return llm
 
-def load_llm1(query):
-    llm = AzureChatOpenAI(
-    azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-    azure_deployment="GPT35",
-    openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-   
-)
+
     return llm.invoke(query).content
 
 
 def retrieval_qa_chain(llm, prompt, db):
+    
     qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
                                        retriever=db.as_retriever(search_kwargs={'k': 2}),
                                        return_source_documents=True,
                                        chain_type_kwargs={'prompt': prompt}
+                                       
                                        )
     return qa_chain
 
@@ -130,8 +128,11 @@ def qa_bot():
     return qa
 
 def final_result(query):
+   
+    #query=format_prompt_with_history(st.session_state.messages,query)
     qa_result = qa_bot()
     response = qa_result({'query': query})
+    
     return response
 
 
@@ -163,22 +164,30 @@ if st.session_state.messages[-1]["role"] != "assistant":
         with st.spinner("Thinking..."):
             answer= final_result(prompt)
             response = answer['result']
-            if "I'm sorry"  in response or "I don't know" in response:
-                placeholder = st.empty()
-                full_response=load_llm1(prompt)
-                placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
-                # st.write("case 1")
+           
+            source_documents = answer['source_documents']
+                        
+            placeholder = st.empty()
+            full_response = ''
+            for item in response:
+                full_response += item
+                # st.write("case 2")
                 # placeholder.markdown(full_response)
+            # st.write("case 3")
+            pages = ''
+            pagecontent = ''
+            for doc in source_documents:
                 
-            else:
-                placeholder = st.empty()
-                full_response = ''
-                for item in response:
-                    full_response += item
-                    # st.write("case 2")
-                    # placeholder.markdown(full_response)
-                # st.write("case 3")
-                placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
+                page_no = str(doc.metadata.get('page')+1)
+                pages  += page_no+","
+                pagecontent += doc.page_content
+                if "I'm sorry"  in response or "I don't know" in response:
+                    placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
+                else:    
+                    placeholder.markdown(f'<div class="response">{full_response}</div><div class="response" Sources:></div>'
+                                     f'<div class="response">Reference document-{source_documents[0].metadata.get('source')}</div>'
+                                     f'<div class="response"> Chunk Content:. {pagecontent}</div>'
+                                     f'<div class="response"> Page No. {pages}</div>', unsafe_allow_html=True)
                 # placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
