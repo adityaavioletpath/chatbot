@@ -10,3 +10,4 @@ streamlit
 huggingface_hub
 langchain_openai
 langchain_community
+docx2txt
