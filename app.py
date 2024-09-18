@@ -6,7 +6,6 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_openai import AzureChatOpenAI
 from langchain.memory import ConversationBufferMemory
-from docx import Document as DocxDocument
 from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
