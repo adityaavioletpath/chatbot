@@ -6,6 +6,14 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain_openai import AzureChatOpenAI
 from langchain.memory import ConversationBufferMemory
+from docx import Document as DocxDocument
+from typing import List
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.schema.document import Document
+from langchain.document_loaders import Docx2txtLoader
+from io import BytesIO
+from langchain_community.vectorstores import FAISS
+from langchain_openai import AzureOpenAIEmbeddings
 
 os.environ["AZURE_OPENAI_API_VERSION"]="2024-05-01-preview"
 os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"]="text-embedding-ada"
@@ -14,6 +22,30 @@ os.environ["AZURE_OPENAI_API_KEY"]= "23ba1b747e164a38b3e537573b49cf60"
 
 DB_FAISS_PATH = 'vectorstore/db_faiss'
 
+def load_documents(word_docs):
+    documents = []
+    
+    for uploaded_file in word_docs:
+        # Save the uploaded file to a temporary location
+        temp_file_path = f"{uploaded_file.name}"
+        with open(temp_file_path, "wb") as f:
+            f.write(uploaded_file.read())
+        
+        # Use the path with Docx2txtLoader
+        document_loader = Docx2txtLoader(temp_file_path)  # Use Docx2txtLoader for .docx files
+        documents.extend(document_loader.load())
+        return documents
+    
+    return documents
+    
+def split_documents(documents: list[Document]):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,       # Adjust chunk size
+        chunk_overlap=50      # Adjust overlap size
+    )
+    return text_splitter.split_documents(documents)
+
+# Split the documents into smaller chunks
 
 
 # Inject custom CSS
@@ -84,7 +116,10 @@ def set_custom_prompt():
                             input_variables=['context', 'question'])
     return prompt
 
-   
+
+    
+    
+    
 
 
 def load_llm():
@@ -103,7 +138,7 @@ def retrieval_qa_chain(llm, prompt, db):
     
     qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=db.as_retriever(search_kwargs={'k': 2}),
+                                       retriever=db.as_retriever(search_kwargs={'k': 1}),
                                        return_source_documents=True,
                                        chain_type_kwargs={'prompt': prompt}
                                        
@@ -112,15 +147,16 @@ def retrieval_qa_chain(llm, prompt, db):
 
 
 def qa_bot():
-    embeddings = AzureOpenAIEmbeddings(
+    """embeddings = AzureOpenAIEmbeddings(
     azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
     
 )
-    db = FAISS.load_local(DB_FAISS_PATH, embeddings,allow_dangerous_deserialization=True)
+    db = FAISS.load_local(DB_FAISS_PATH, embeddings,allow_dangerous_deserialization=True)"""
     llm = load_llm()
     qa_prompt = set_custom_prompt()
-    qa = retrieval_qa_chain(llm, qa_prompt, db)
+
+    qa = retrieval_qa_chain(llm, qa_prompt, st.session_state.db)
 
     return qa
 
@@ -163,6 +199,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
             response = answer['result']
            
             source_documents = answer['source_documents']
+            print(source_documents)
                         
             placeholder = st.empty()
             full_response = ''
@@ -171,20 +208,41 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 # st.write("case 2")
                 # placeholder.markdown(full_response)
             # st.write("case 3")
-            pages = ''
+
+            #pages = ''
             pagecontent = ''
             for doc in source_documents:
                 
-                page_no = str(doc.metadata.get('page')+1)
-                pages  += page_no+","
+                #page_no = str(doc.metadata.get('page')+1)
+                #pages  += page_no+","
                 pagecontent += doc.page_content
                 if "I'm sorry"  in response or "I don't know" in response:
                     placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
                 else:    
                     placeholder.markdown(f'<div class="response">{full_response}</div><div class="response" Sources:></div>'
                                      f'<div class="response">Reference document-{source_documents[0].metadata.get('source')}</div>'
-                                     f'<div class="response"> Chunk Content:. {pagecontent}</div>'
-                                     f'<div class="response"> Page No. {pages}</div>', unsafe_allow_html=True)
+                                     f'<div class="response"> Chunk Content:. {pagecontent}</div>', unsafe_allow_html=True)
+                                     #f'<div class="response"> Page No. {pages}</div>'
                 # placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
+
+
+with st.sidebar:
+    st.subheader("Your documents")
+    word_docs = st.file_uploader(
+        "Upload your word docs here and click on 'Process'", accept_multiple_files=True)
+    
+    if st.button("Process"):
+        with st.spinner("Processing"):
+             doc=load_documents(word_docs) 
+             chunks = split_documents(doc)
+             
+             embeddings = AzureOpenAIEmbeddings(
+            azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+            openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+
+            )
+
+             st.session_state.db = FAISS.from_documents(chunks, embeddings)
+                
