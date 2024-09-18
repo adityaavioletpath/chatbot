@@ -31,7 +31,7 @@ def load_documents(word_docs):
         with open(temp_file_path, "wb") as f:
             f.write(uploaded_file.read())
         
-        # Use the path with Docx2txtLoader
+        
         document_loader = Docx2txtLoader(temp_file_path)  # Use Docx2txtLoader for .docx files
         documents.extend(document_loader.load())
         return documents
