@@ -30,7 +30,7 @@ def load_documents(word_docs):
         with open(temp_file_path, "wb") as f:
             f.write(uploaded_file.read())
         
-        
+        # Use the path with Docx2txtLoader
         document_loader = Docx2txtLoader(temp_file_path)  # Use Docx2txtLoader for .docx files
         documents.extend(document_loader.load())
         return documents
@@ -39,8 +39,8 @@ def load_documents(word_docs):
     
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,       # Adjust chunk size
-        chunk_overlap=50      # Adjust overlap size
+        chunk_size=1000,       # Adjust chunk size
+        chunk_overlap=100      # Adjust overlap size
     )
     return text_splitter.split_documents(documents)
 
@@ -97,6 +97,11 @@ custom_css = """
         .css-1q8dd3e {
             font-size: 14px !important;
         }
+        .bold-and-bigger {
+            color: black;
+            font-weight: bold; /* Makes the text bold */
+            font-size: 16px !important;  /* Increases the size of the text (adjust as needed) */
+        }
     </style>
 """
 
@@ -126,6 +131,7 @@ def load_llm():
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
     azure_deployment="GPT35",
     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+    temperature=0
 )
     return llm
 
@@ -135,14 +141,14 @@ def load_llm():
 
 def retrieval_qa_chain(llm, prompt, db):
     
-    qa_chain = RetrievalQA.from_chain_type(llm=llm,
+     qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=db.as_retriever(search_kwargs={'k': 1}),
+                                       retriever=db.as_retriever(search_kwargs={'k': 2}),
                                        return_source_documents=True,
-                                       chain_type_kwargs={'prompt': prompt}
+                                       chain_type_kwargs={'prompt': prompt},
                                        
                                        )
-    return qa_chain
+     return qa_chain
 
 
 def qa_bot():
@@ -164,7 +170,7 @@ def final_result(query):
     #query=format_prompt_with_history(st.session_state.messages,query)
     qa_result = qa_bot()
     response = qa_result({'query': query})
-    
+    print(response)
     return response
 
 
@@ -219,8 +225,8 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
                 else:    
                     placeholder.markdown(f'<div class="response">{full_response}</div><div class="response" Sources:></div>'
-                                     f'<div class="response">Reference document-{source_documents[0].metadata.get('source')}</div>'
-                                     f'<div class="response"> Chunk Content:. {pagecontent}</div>', unsafe_allow_html=True)
+                                     f'<div><span class="bold-and-bigger">Reference document-{source_documents[0].metadata.get('source')}</span></div>'
+                                     f'<div class="response"><span class="bold-and-bigger">Chunk Content:.</span> {pagecontent}</div>', unsafe_allow_html=True)
                                      #f'<div class="response"> Page No. {pages}</div>'
                 # placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
