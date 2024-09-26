@@ -39,8 +39,8 @@ def load_documents(word_docs):
     
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,       # Adjust chunk size
-        chunk_overlap=100      # Adjust overlap size
+        chunk_size=2000,       # Adjust chunk size
+        chunk_overlap=200      # Adjust overlap size
     )
     return text_splitter.split_documents(documents)
 
@@ -143,7 +143,7 @@ def retrieval_qa_chain(llm, prompt, db):
     
      qa_chain = RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=db.as_retriever(search_kwargs={'k': 2}),
+                                       retriever=db.as_retriever(search_kwargs={'k': 3}),
                                        return_source_documents=True,
                                        chain_type_kwargs={'prompt': prompt},
                                        
