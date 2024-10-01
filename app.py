@@ -102,6 +102,9 @@ custom_css = """
             font-weight: bold; /* Makes the text bold */
             font-size: 16px !important;  /* Increases the size of the text (adjust as needed) */
         }
+        .st-emotion-cache-12fmjuu{
+            visibility: hidden;
+        }
     </style>
 """
 
