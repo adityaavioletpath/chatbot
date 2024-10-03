@@ -57,7 +57,7 @@ Question: {question}
 Only return the helpful answer below and nothing else.
 Helpful answer:
 """
-st.set_page_config(page_title="Bank Smart Search")
+st.set_page_config(page_title="ADCB Policy Search")
 custom_css = """
     <style>
         /* General body styling */
@@ -112,7 +112,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 
 
-st.markdown('<h1 class="adbc-title">Bank Smart Search</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="adbc-title">ADCB Policy Search</h1>', unsafe_allow_html=True)
 st.write('This chatbot will provide the knowledge based on the bank provided document')
 
 def set_custom_prompt():
@@ -178,7 +178,7 @@ def final_result(query):
 
 
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "Welcome to the Central Bank Of UAE ask anything related to cerdit facilities?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Welcome to the ADCB Bank ask anything related to credit facilities?"}]
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
