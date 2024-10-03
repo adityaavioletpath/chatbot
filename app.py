@@ -139,7 +139,7 @@ def load_llm():
     return llm
 
 
-    return llm.invoke(query).content
+    
 
 
 def retrieval_qa_chain(llm, prompt, db):
