@@ -155,16 +155,16 @@ def retrieval_qa_chain(llm, prompt, db):
 
 
 def qa_bot():
-    """embeddings = AzureOpenAIEmbeddings(
+    embeddings = AzureOpenAIEmbeddings(
     azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
     
 )
-    db = FAISS.load_local(DB_FAISS_PATH, embeddings,allow_dangerous_deserialization=True)"""
+    db = FAISS.load_local(DB_FAISS_PATH, embeddings,allow_dangerous_deserialization=True)
     llm = load_llm()
     qa_prompt = set_custom_prompt()
 
-    qa = retrieval_qa_chain(llm, qa_prompt, st.session_state.db)
+    qa = retrieval_qa_chain(llm, qa_prompt, db)
 
     return qa
 
@@ -236,21 +236,5 @@ if st.session_state.messages[-1]["role"] != "assistant":
     st.session_state.messages.append(message)
 
 
-with st.sidebar:
-    st.subheader("Your documents")
-    word_docs = st.file_uploader(
-        "Upload your word docs here and click on 'Process'", accept_multiple_files=True)
-    
-    if st.button("Process"):
-        with st.spinner("Processing"):
-             doc=load_documents(word_docs) 
-             chunks = split_documents(doc)
-             
-             embeddings = AzureOpenAIEmbeddings(
-            azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
-            openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
 
-            )
-
-             st.session_state.db = FAISS.from_documents(chunks, embeddings)
                 
