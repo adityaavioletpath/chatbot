@@ -178,7 +178,7 @@ def final_result(query):
 
 
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "Welcome to the ADCB Bank ask anything related to credit policies?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Welcome to the ADCB Bank. Ask anything related to credit policies."}]
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -188,7 +188,7 @@ for message in st.session_state.messages:
             st.markdown(f'<div class="response">{message["content"]}</div>', unsafe_allow_html=True)
 
 def clear_chat_history():
-    st.session_state.messages = [{"role": "assistant", "content": "Welcome to the Central Bank Of UAE ask anything related to cerdit facilities?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Welcome to the ADCB Bank. Ask anything related to credit policies."}]
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 
@@ -219,7 +219,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
 
             #pages = ''
             pagecontent = ''
-            for doc in source_documents:
+            for doc in source_documents[0]:
                 
                 #page_no = str(doc.metadata.get('page')+1)
                 #pages  += page_no+","
@@ -229,7 +229,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 else:    
                     placeholder.markdown(f'<div class="response">{full_response}</div><div class="response" Sources:></div>'
                                      f'<div><span class="bold-and-bigger">Reference document-{source_documents[0].metadata.get('source')}</span></div>'
-                                     f'<div class="response"><span class="bold-and-bigger">Chunk Content:.</span> {pagecontent}</div>', unsafe_allow_html=True)
+                                     f'<div class="response"><span class="bold-and-bigger">Reference paragraph:</span> {pagecontent}</div>', unsafe_allow_html=True)
                                      #f'<div class="response"> Page No. {pages}</div>'
                 # placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
