@@ -223,7 +223,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 
                 #page_no = str(doc.metadata.get('page')+1)
                 #pages  += page_no+","
-                pagecontent += doc.page_content
+                pagecontent = doc.page_content
                 if "I'm sorry"  in response or "I don't know" in response:
                     placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
                 else:    
