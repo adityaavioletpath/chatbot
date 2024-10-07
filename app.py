@@ -219,17 +219,17 @@ if st.session_state.messages[-1]["role"] != "assistant":
 
             #pages = ''
             pagecontent = ''
-            for doc in source_documents[0]:
+            for doc in source_documents:
                 
                 #page_no = str(doc.metadata.get('page')+1)
                 #pages  += page_no+","
-                pagecontent = doc.page_content
+                pagecontent += doc.page_content
                 if "I'm sorry"  in response or "I don't know" in response:
                     placeholder.markdown(f'<div class="response">{full_response}</div>', unsafe_allow_html=True)
                 else:    
                     placeholder.markdown(f'<div class="response">{full_response}</div><div class="response" Sources:></div>'
                                      f'<div><span class="bold-and-bigger">Reference document-{source_documents[0].metadata.get('source')}</span></div>'
-                                     f'<div class="response"><span class="bold-and-bigger">Reference paragraph:</span> {pagecontent}</div>', unsafe_allow_html=True)
+                                     f'<div class="response"><span class="bold-and-bigger">Reference paragraph:</span> {source_documents[0].page_content}</div>', unsafe_allow_html=True)
                                      #f'<div class="response"> Page No. {pages}</div>'
                 # placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
